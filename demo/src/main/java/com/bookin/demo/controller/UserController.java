@@ -3,16 +3,16 @@ package com.bookin.demo.controller;
 import com.bookin.demo.dto.UserCreateDto;
 import com.bookin.demo.dto.UserDto;
 import com.bookin.demo.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     @GetMapping
     public List<UserDto> getAllUsers() {

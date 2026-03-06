@@ -2,16 +2,16 @@ package com.bookin.demo.controller;
 
 import com.bookin.demo.dto.BookingDto;
 import com.bookin.demo.service.BookingService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/bookings")
+@RequiredArgsConstructor
 public class BookingController {
 
-    @Autowired
-    private BookingService bookingService;
+    private final BookingService bookingService;
 
     @GetMapping
     public List<BookingDto> getAllBookings() {

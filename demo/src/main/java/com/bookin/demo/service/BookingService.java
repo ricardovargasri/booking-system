@@ -8,7 +8,7 @@ import com.bookin.demo.mapper.BookingMapper;
 import com.bookin.demo.repository.BookingRepository;
 import com.bookin.demo.repository.RoomRepository;
 import com.bookin.demo.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,19 +16,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class BookingService {
 
-    @Autowired
-    private BookingRepository bookingRepository;
+    private final BookingRepository bookingRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private RoomRepository roomRepository;
+    private final RoomRepository roomRepository;
 
-    @Autowired
-    private BookingMapper bookingMapper;
+    private final BookingMapper bookingMapper;
 
     public List<BookingDto> findAll() {
         return bookingRepository.findAll().stream()

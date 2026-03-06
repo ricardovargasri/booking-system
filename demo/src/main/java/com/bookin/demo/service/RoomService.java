@@ -3,19 +3,18 @@ package com.bookin.demo.service;
 import com.bookin.demo.dto.RoomDto;
 import com.bookin.demo.mapper.RoomMapper;
 import com.bookin.demo.repository.RoomRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class RoomService {
 
-    @Autowired
-    private RoomRepository roomRepository;
+    private final RoomRepository roomRepository;
 
-    @Autowired
-    private RoomMapper roomMapper;
+    private final RoomMapper roomMapper;
 
     public List<RoomDto> findAll() {
         return roomRepository.findAll().stream()

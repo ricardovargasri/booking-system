@@ -4,19 +4,18 @@ import com.bookin.demo.dto.UserCreateDto;
 import com.bookin.demo.dto.UserDto;
 import com.bookin.demo.mapper.UserMapper;
 import com.bookin.demo.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
 
     public List<UserDto> findAll() {
         return userRepository.findAll().stream()
