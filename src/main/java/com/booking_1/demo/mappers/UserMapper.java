@@ -1,44 +1,36 @@
 package com.booking_1.demo.mappers;
 
+import com.booking_1.demo.dtos.userDtos.UserDto;
+import com.booking_1.demo.dtos.userDtos.UserRegistrationDto;
 import com.booking_1.demo.entities.User;
 import com.booking_1.demo.enums.Rol;
-import com.booking_1.demo.dtos.UserDto;
-import com.booking_1.demo.dtos.UserRegistrationDto;
+
+import java.util.Optional;
 
 public class UserMapper {
 
     // Converts Entity to DTO (Matches UserDto with 6 fields)
     public static UserDto toDto(User user) {
-        if (user == null) return null;
-        return new UserDto(
-            user.getId(),
-            user.getName(),
-            user.getEmail(),
-            user.getRol(),
-            user.getCreatedAt(),
-            user.getUpdateAt()
-        );
+        return Optional.ofNullable(user)
+                .map(u -> new UserDto(
+                        u.getName(),
+                        u.getEmail(),
+                        u.getRol()))
+                .orElse(null);
     }
 
     // Converts Registration DTO to Entity (Creates a new User)
     public static User toEntity(UserRegistrationDto registrationDto) {
-        if (registrationDto == null) return null;
-        User user = new User();
-        user.setName(registrationDto.name());
-        user.setEmail(registrationDto.email());
-        user.setPassword(registrationDto.password()); // Plain text for now
-        user.setRol(Rol.USER); // Default role is USER
-        return user;
-    }
+        return Optional.ofNullable(registrationDto)
+                .map(dto -> {
+                    User user = new User();
+                    user.setName(dto.name());
+                    user.setEmail(dto.email());
+                    user.setPassword(dto.password());
+                    user.setRol(Rol.USER);
+                    return user;
+                })
+                .orElse(null);
 
-    // Allows updating an existing User from a DTO
-    public static User updateEntity(UserDto userDto) {
-        if (userDto == null) return null;
-        User user = new User();
-        user.setId(userDto.id());
-        user.setName(userDto.name());
-        user.setEmail(userDto.email());
-        user.setRol(userDto.rol());
-        return user;
     }
 }
