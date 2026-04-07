@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.booking_1.demo.dtos.UserDto;
-import com.booking_1.demo.dtos.UserRegistrationDto;
-import com.booking_1.demo.services.userService.IUserService;
+import com.booking_1.demo.dtos.userDtos.UserDto;
+import com.booking_1.demo.dtos.userDtos.UserRegistrationDto;
+import com.booking_1.demo.services.userServices.IUserService;
 
 @RestController
 @RequestMapping("/api/v1/user")

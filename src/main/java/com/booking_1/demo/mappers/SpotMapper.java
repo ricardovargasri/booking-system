@@ -1,36 +1,15 @@
 package com.booking_1.demo.mappers;
 
-import java.util.Optional;
+import org.mapstruct.Mapper;
 
 import com.booking_1.demo.dtos.spotDtos.SpotRegistrationDto;
 import com.booking_1.demo.dtos.spotDtos.SpotDto;
 import com.booking_1.demo.entities.Spot;
 
-public class SpotMapper {
+@Mapper(componentModel = "spring")
+public interface SpotMapper {
 
-    public static SpotDto toDto(Spot spot) {
-        return Optional.ofNullable(spot)
-                .map(s -> new SpotDto(
-                        s.getName(),
-                        s.getLocation(),
-                        s.getPricePerNight(),
-                        s.getMaxCapacity(),
-                        s.getTypeSpot()))
-                .orElse(null);
+    SpotDto toDto(Spot spot);
 
-    }
-
-    public static Spot spotToEntity(SpotRegistrationDto spotRegistrationDto) {
-        return Optional.ofNullable(spotRegistrationDto)
-                .map(s -> {
-                    Spot spot = new Spot();
-                    spot.setName(s.name());
-                    spot.setLocation(s.location());
-                    spot.setPricePerNight(s.pricePerNight());
-                    spot.setMaxCapacity(s.maxCapacity());
-                    spot.setTypeSpot(s.typeSpot());
-                    return spot;
-                })
-                .orElse(null);
-    }
+    Spot spotToEntity(SpotRegistrationDto spotRegistrationDto);
 }

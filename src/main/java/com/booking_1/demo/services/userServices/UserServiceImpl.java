@@ -16,22 +16,24 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements IUserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
+        this.userMapper = userMapper;
     }
 
     public UserDto save(UserRegistrationDto userRegistrationDto) {
 
-        User user = UserMapper.toEntity(userRegistrationDto);
+        User user = userMapper.toEntity(userRegistrationDto);
         User userSaved = userRepository.save(user);
 
-        return UserMapper.toDto(userSaved);
+        return userMapper.toDto(userSaved);
     }
 
     public UserDto findById(UUID id) {
         return userRepository.findById(id)
-                .map(user -> UserMapper.toDto(user))
+                .map(user -> userMapper.toDto(user))
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
     }
@@ -45,7 +47,7 @@ public class UserServiceImpl implements IUserService {
 
                     return userRepository.save(user);
                 })
-                .map(userSaved -> UserMapper.toDto(userSaved))
+                .map(userSaved -> userMapper.toDto(userSaved))
                 .orElseThrow(() -> new RuntimeException("user not found by id " + id));
 
     }
@@ -62,7 +64,7 @@ public class UserServiceImpl implements IUserService {
     @Override
     public List<UserDto> findAll() {
         return userRepository.findAll().stream()
-                .map(UserMapper::toDto)
+                .map(userMapper::toDto)
                 .toList();
     }
 }
