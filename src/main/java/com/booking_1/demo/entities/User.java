@@ -5,7 +5,6 @@ import java.util.UUID;
 
 import com.booking_1.demo.enums.Rol;
 
-import jakarta.annotation.Generated;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

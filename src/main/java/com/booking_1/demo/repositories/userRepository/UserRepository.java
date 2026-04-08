@@ -1,4 +1,4 @@
-package com.booking_1.demo.repositories;
+package com.booking_1.demo.repositories.userRepository;
 
 import java.util.UUID;
 

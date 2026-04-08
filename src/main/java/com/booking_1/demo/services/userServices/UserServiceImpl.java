@@ -4,24 +4,21 @@ import com.booking_1.demo.dtos.userDtos.UserDto;
 import com.booking_1.demo.dtos.userDtos.UserRegistrationDto;
 import com.booking_1.demo.entities.User;
 import com.booking_1.demo.mappers.UserMapper;
-import com.booking_1.demo.repositories.UserRepository;
+import com.booking_1.demo.repositories.userRepository.UserRepository;
 
 import java.util.List;
-import java.util.Optional;
+
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements IUserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-
-    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper) {
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-    }
 
     public UserDto save(UserRegistrationDto userRegistrationDto) {
 
@@ -33,7 +30,7 @@ public class UserServiceImpl implements IUserService {
 
     public UserDto findById(UUID id) {
         return userRepository.findById(id)
-                .map(user -> userMapper.toDto(user))
+                .map(userMapper::toDto)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
     }
@@ -47,7 +44,7 @@ public class UserServiceImpl implements IUserService {
 
                     return userRepository.save(user);
                 })
-                .map(userSaved -> userMapper.toDto(userSaved))
+                .map(userMapper::toDto)
                 .orElseThrow(() -> new RuntimeException("user not found by id " + id));
 
     }
