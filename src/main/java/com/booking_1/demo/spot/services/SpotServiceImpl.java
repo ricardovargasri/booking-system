@@ -4,11 +4,11 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.booking_1.demo.repositories.spotRepository.SpotRepository;
 import com.booking_1.demo.spot.dtos.SpotDto;
 import com.booking_1.demo.spot.dtos.SpotRegistrationDto;
 import com.booking_1.demo.spot.entities.Spot;
 import com.booking_1.demo.spot.mappers.SpotMapper;
-import com.booking_1.demo.spot.repositories.SpotRepository;
 
 import lombok.RequiredArgsConstructor;
 

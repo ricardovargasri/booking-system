@@ -1,8 +1,10 @@
 package com.booking_1.demo.user.entities;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
+import com.booking_1.demo.booking.entities.Booking;
 import com.booking_1.demo.core.enums.Rol;
 
 import jakarta.persistence.Column;
@@ -12,13 +14,16 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import lombok.Data;
 
+import jakarta.persistence.Table;
+
 @Entity
 @Data
-
+@Table(name = "users")
 public class User {
 
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -54,4 +59,6 @@ public class User {
         this.updateAt = LocalDateTime.now();
     }
 
+    @OneToMany(mappedBy = "guest")
+    private List<Booking> bookings;
 }

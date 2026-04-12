@@ -1,5 +1,6 @@
 package com.booking_1.demo.user.services;
 
+import com.booking_1.demo.core.enums.Rol;
 import com.booking_1.demo.user.dtos.UserDto;
 import com.booking_1.demo.user.dtos.UserRegistrationDto;
 import com.booking_1.demo.user.entities.User;
@@ -23,6 +24,7 @@ public class UserServiceImpl implements IUserService {
     public UserDto save(UserRegistrationDto userRegistrationDto) {
 
         User user = userMapper.toEntity(userRegistrationDto);
+        user.setRol(Rol.USER);
         User userSaved = userRepository.save(user);
 
         return userMapper.toDto(userSaved);

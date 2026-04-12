@@ -15,9 +15,9 @@ import com.booking_1.demo.spot.entities.Spot;
 import com.booking_1.demo.user.entities.User;
 import com.booking_1.demo.core.enums.BookingStatus;
 import com.booking_1.demo.core.enums.PaymentStatus;
+import com.booking_1.demo.repositories.spotRepository.SpotRepository;
 import com.booking_1.demo.booking.mappers.BookingMapper;
 import com.booking_1.demo.booking.repositories.BookingRepository;
-import com.booking_1.demo.spot.repositories.SpotRepository;
 import com.booking_1.demo.user.repositories.UserRepository;
 
 import lombok.RequiredArgsConstructor;
