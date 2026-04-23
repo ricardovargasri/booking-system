@@ -1,4 +1,4 @@
-package com.booking_1.demo.repositories.spotRepository;
+package com.booking_1.demo.spot.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

@@ -2,9 +2,12 @@ package com.booking_1.demo.spot.services;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.booking_1.demo.repositories.spotRepository.SpotRepository;
+import com.booking_1.demo.core.exceptions.ResourceNotFoundException;
+import com.booking_1.demo.spot.repositories.SpotRepository;
 import com.booking_1.demo.spot.dtos.SpotDto;
 import com.booking_1.demo.spot.dtos.SpotRegistrationDto;
 import com.booking_1.demo.spot.entities.Spot;
@@ -30,14 +33,14 @@ public class SpotServiceImpl implements ISpotService {
     public SpotDto findById(Long id) {
         return spotRepository.findById(id)
                 .map(spotMapper::toDto)
-                .orElseThrow(() -> new RuntimeException("spot not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Spot not found with id: " + id));
     }
 
     @Override
-    public List<SpotDto> findAll() {
-        return spotRepository.findAll().stream()
-                .map(spotMapper::toDto)
-                .toList();
+    public Page<SpotDto> findAll(Pageable pageable) {
+        return spotRepository.findAll(pageable)
+                .map(spotMapper::toDto);
+
     }
 
     @Override
@@ -53,13 +56,13 @@ public class SpotServiceImpl implements ISpotService {
                     return spotRepository.save(s);
                 })
                 .map(spotMapper::toDto)
-                .orElseThrow(() -> new RuntimeException("spot not found by id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("spot not found by id " + id));
     }
 
     @Override
     public void deleteSpot(Long id) {
         Spot spot = spotRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("spot not found with id: " + id));
         spotRepository.delete(spot);
     }
 

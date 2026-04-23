@@ -6,6 +6,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.booking_1.demo.booking.dtos.BookingDto;
@@ -15,11 +17,14 @@ import com.booking_1.demo.spot.entities.Spot;
 import com.booking_1.demo.user.entities.User;
 import com.booking_1.demo.core.enums.BookingStatus;
 import com.booking_1.demo.core.enums.PaymentStatus;
-import com.booking_1.demo.repositories.spotRepository.SpotRepository;
+import com.booking_1.demo.core.exceptions.BadRequestException;
+import com.booking_1.demo.core.exceptions.ResourceNotFoundException;
+import com.booking_1.demo.spot.repositories.SpotRepository;
 import com.booking_1.demo.booking.mappers.BookingMapper;
 import com.booking_1.demo.booking.repositories.BookingRepository;
 import com.booking_1.demo.user.repositories.UserRepository;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -35,26 +40,27 @@ public class BookingServiceImpl implements IBookingService {
     public BookingDto save(BookingRegistrationDto bookingRegistration) {
         // 1. buscar las entidades
         User guest = userRepository.findById(bookingRegistration.guestId())
-                .orElseThrow(() -> new RuntimeException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "user not found by id " + bookingRegistration.guestId()));
 
         Spot spot = spotRepository.findById(bookingRegistration.spotId())
-                .orElseThrow(() -> new RuntimeException("spot not found by id " + bookingRegistration.spotId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("spot not found by id " + bookingRegistration.spotId()));
 
         // 2. validar reglas de negocio
         if (bookingRegistration.numberOfGuests() > spot.getMaxCapacity()) {
-            throw new RuntimeException("es demasiada gente hermano");
+            throw new BadRequestException("es demasiada gente hermano");
         }
         if (!spot.getIsAvailable()) {
-            throw new RuntimeException("alojamiento no disponible");
+            throw new BadRequestException("Spot is not available");
         }
         if (bookingRegistration.checkInDate().isBefore(LocalDate.now())) {
-            throw new RuntimeException("la fecha debe ser de este momento hacia adelante");
+            throw new BadRequestException("la fecha debe ser de este momento hacia adelante");
         }
         if (bookingRegistration.checkOutDate().isBefore(bookingRegistration.checkInDate())
                 ||
                 bookingRegistration.checkOutDate().isEqual(bookingRegistration.checkInDate())) {
-            throw new RuntimeException("segun sus fechas se esta llendo antes de haber llegado");
+            throw new BadRequestException("segun sus fechas se esta llendo antes de haber llegado");
         }
         // 3. matematicas
         long noches = ChronoUnit.DAYS.between(bookingRegistration.checkInDate(), bookingRegistration.checkOutDate());
@@ -78,20 +84,21 @@ public class BookingServiceImpl implements IBookingService {
     public BookingDto findById(Long id) {
         return bookingRepository.findById(id)
                 .map(bookingMapper::toDto)
-                .orElseThrow(() -> new RuntimeException("reserva no encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("reserva no encontrada"));
     }
 
     @Override
-    public List<BookingDto> findAll() {
-        return bookingRepository.findAll().stream()
-                .map(bookingMapper::toDto)
-                .toList();
+    @Operation
+    public Page<BookingDto> findAll(Pageable pageable) {
+        return bookingRepository.findAll(pageable)
+                .map(bookingMapper::toDto);
+
     }
 
     @Override
     public BookingDto cancelBooking(Long id) {
         Booking booking = bookingRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("reserva no encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("reserva no encontrada"));
 
         booking.setStatus(BookingStatus.CANCELLED);
 
