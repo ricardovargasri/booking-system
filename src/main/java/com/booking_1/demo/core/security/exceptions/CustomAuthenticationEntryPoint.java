@@ -19,14 +19,14 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException authException) throws IOException, ServletException {
 
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        response.setContentType("aplication/json");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
 
         ErrorResponse errorResponse = new ErrorResponse(
                 java.time.LocalDateTime.now(),
-                HttpServletResponse.SC_FORBIDDEN,
+                HttpServletResponse.SC_UNAUTHORIZED,
                 "Forbidden",
-                "¡Alto ahí! No tienes los permisos necesarios (" + authException.getMessage() + ")",
+                "No has iniciado sesión o tu token es inválido (" + authException.getMessage() + ")",
                 request.getRequestURI());
 
         com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
