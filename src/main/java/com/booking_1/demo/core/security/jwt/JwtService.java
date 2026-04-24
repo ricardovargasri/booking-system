@@ -8,32 +8,73 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class JwtService {
 
-    // Una llave secreta generada automáticamente para este ejemplo.
-    // En producción, esto debería venir de una variable de entorno segura.
+    // En producción esto debe venir de una variable de entorno segura.
     private static final Key KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
-    // Tiempo de expiración 24 horas
-    private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 24;
+    // Access Token: 50 minutos
+    private static final long ACCESS_TOKEN_EXPIRATION = 1000L * 60 * 50;
 
-    public String generateToken(UserDetails userDetails) {
+    // ------------------------------------------------------------------
+    // ACCESS TOKEN (JWT firmado, corta duración)
+    // ------------------------------------------------------------------
+
+    public String generateAccessToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        // Aquí podrías añadir roles u otros datos al payload (claims)
+        // Añadimos el rol al payload para no consultar la BD en cada petición
+        claims.put("roles", userDetails.getAuthorities());
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION))
                 .signWith(KEY)
                 .compact();
     }
+
+    // Mantener compatibilidad con código existente que llame a generateToken()
+    public String generateToken(UserDetails userDetails) {
+        return generateAccessToken(userDetails);
+    }
+
+    // ------------------------------------------------------------------
+    // REFRESH TOKEN (UUID aleatorio, larga duración, vive en BD)
+    // ------------------------------------------------------------------
+
+    // Genera el valor del token (un UUID imposible de adivinar)
+    public String generateRefreshTokenValue() {
+        return UUID.randomUUID().toString();
+    }
+
+    // Devuelve cuándo expira: ahora + 20 días
+    public LocalDateTime generateRefreshTokenExpiry() {
+        return LocalDateTime.now().plusDays(20);
+    }
+
+    // ------------------------------------------------------------------
+    // UTILIDADES PARA REDIS (Lista Negra de Access Tokens)
+    // ------------------------------------------------------------------
+
+    // Devuelve los milisegundos que le quedan de vida al token
+    // Usado para poner el TTL exacto en Redis al hacer logout
+    public long getRemainingTimeMillis(String token) {
+        Date expiration = extractAllClaims(token).getExpiration();
+        long remaining = expiration.getTime() - System.currentTimeMillis();
+        return Math.max(remaining, 0); // Nunca negativo
+    }
+
+    // ------------------------------------------------------------------
+    // MÉTODOS DE VALIDACIÓN Y EXTRACCIÓN
+    // ------------------------------------------------------------------
 
     public String extractUsername(String token) {
         return extractAllClaims(token).getSubject();
@@ -56,3 +97,4 @@ public class JwtService {
                 .getBody();
     }
 }
+

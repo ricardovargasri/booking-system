@@ -2,6 +2,7 @@ package com.booking_1.demo.core.security.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,6 +15,7 @@ import com.booking_1.demo.user.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
+@EnableJpaAuditing
 @RequiredArgsConstructor
 public class ApplicationConfig {
 

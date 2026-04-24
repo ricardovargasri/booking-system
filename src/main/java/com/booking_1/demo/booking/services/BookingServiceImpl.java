@@ -73,6 +73,7 @@ public class BookingServiceImpl implements IBookingService {
         booking.setTotalPrice(totalPrice);
         booking.setCreatedAt(LocalDateTime.now());
         booking.setStatus(BookingStatus.PENDING);
+        booking.setPaymentStatus(PaymentStatus.PENDING_PAYMENT);
 
         // 5. guardar y devolver
         Booking bookingSaved = bookingRepository.save(booking);

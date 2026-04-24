@@ -3,6 +3,8 @@ package com.booking_1.demo.booking.entities;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
 import com.booking_1.demo.core.enums.BookingStatus;
 import com.booking_1.demo.core.enums.PaymentStatus;
 import com.booking_1.demo.spot.entities.Spot;
@@ -10,6 +12,7 @@ import com.booking_1.demo.user.entities.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -27,6 +30,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 public class Booking {
 
     @Id

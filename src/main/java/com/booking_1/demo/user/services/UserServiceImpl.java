@@ -29,6 +29,11 @@ public class UserServiceImpl implements IUserService {
 
     public UserDto save(UserRegistrationDto userRegistrationDto) {
 
+        // Verificar si el email ya existe
+        if (userRepository.findByEmail(userRegistrationDto.email()).isPresent()) {
+            throw new com.booking_1.demo.core.exceptions.BadRequestException("El correo electrónico ya está registrado");
+        }
+
         User user = userMapper.toEntity(userRegistrationDto);
         user.setRol(Rol.USER);
         user.setPassword(passwordEncoder.encode(user.getPassword()));

@@ -54,6 +54,7 @@ public class UserController {
 
     @GetMapping
     @Operation(summary = "Obtener todos los usuarios paginados")
+    @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMIN')")
     public Page<UserDto> getAllUsers(Pageable pageable) {
         return userService.findAll(pageable);
     }
