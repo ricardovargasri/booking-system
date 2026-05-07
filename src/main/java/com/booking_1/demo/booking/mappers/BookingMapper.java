@@ -1,13 +1,20 @@
 package com.booking_1.demo.booking.mappers;
 
+import java.util.UUID;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
 import com.booking_1.demo.booking.dtos.BookingDto;
 import com.booking_1.demo.booking.dtos.BookingRegistrationDto;
 import com.booking_1.demo.booking.entities.Booking;
+import com.booking_1.demo.core.enums.BookingStatus;
+import com.booking_1.demo.core.enums.PaymentStatus;
+import com.booking_1.demo.spot.entities.Spot;
+import com.booking_1.demo.user.entities.User;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface BookingMapper {
 
     @Mapping(target = "guestId", source = "guest.id")

@@ -1,7 +1,12 @@
 package com.booking_1.demo.booking.web;
 
 import java.util.List;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,28 +24,39 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/bookings")
 @RequiredArgsConstructor
+@Tag(name = "Booking", description = "Endpoints for handling reservations and payments")
 public class BookingController {
 
     private final IBookingService bookingService;
 
     @PostMapping
+    @Operation(summary = "Create a new booking", description = "Processes a reservation request, calculates price, and sets initial status")
     public BookingDto save(@RequestBody BookingRegistrationDto bookingRegistrationDto) {
         return bookingService.save(bookingRegistrationDto);
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get booking details", description = "Retrieves information about a specific reservation")
     public BookingDto findById(@PathVariable Long id) {
         return bookingService.findById(id);
     }
 
     @GetMapping
-    public List<BookingDto> findAll() {
-        return bookingService.findAll();
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Get all bookings (Paginated)")
+    public Page<BookingDto> findAll(Pageable pageable) {
+        return bookingService.findAll(pageable);
     }
 
     @PatchMapping("/{id}/cancel")
     public BookingDto cancelBooking(@PathVariable Long id) {
         return bookingService.cancelBooking(id);
+    }
+
+    @GetMapping("/my")
+    @Operation(summary = "obtener las reservas de usuario autenticado")
+    public Page<BookingDto> getMyBookings(Pageable pageable) {
+        return bookingService.FindMyBookings(pageable);
     }
 
 }

@@ -16,3 +16,4 @@ public interface UserMapper {
     @Mapping(target = "rol", constant = "USER")
     User toEntity(UserRegistrationDto registrationDto);
 }
+
