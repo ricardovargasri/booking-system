@@ -1,6 +1,7 @@
 package com.booking_1.demo.user.services;
 
 import com.booking_1.demo.core.enums.Rol;
+import com.booking_1.demo.core.exceptions.BadRequestException;
 import com.booking_1.demo.core.exceptions.ResourceNotFoundException;
 import com.booking_1.demo.user.dtos.UserDto;
 import com.booking_1.demo.user.dtos.UserRegistrationDto;
@@ -31,7 +32,7 @@ public class UserServiceImpl implements IUserService {
 
         // Verificar si el email ya existe
         if (userRepository.findByEmail(userRegistrationDto.email()).isPresent()) {
-            throw new com.booking_1.demo.core.exceptions.BadRequestException("El correo electrónico ya está registrado");
+            throw new BadRequestException("El correo electrónico ya está registrado");
         }
 
         User user = userMapper.toEntity(userRegistrationDto);

@@ -8,7 +8,9 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import com.booking_1.demo.booking.dtos.BookingDto;
 import com.booking_1.demo.booking.dtos.BookingRegistrationDto;
@@ -25,6 +27,7 @@ import com.booking_1.demo.booking.repositories.BookingRepository;
 import com.booking_1.demo.user.repositories.UserRepository;
 
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -36,6 +39,7 @@ public class BookingServiceImpl implements IBookingService {
     private final SpotRepository spotRepository;
     private final BookingMapper bookingMapper;
 
+    @Transactional
     @Override
     public BookingDto save(BookingRegistrationDto bookingRegistration) {
         // 1. buscar las entidades
@@ -43,7 +47,7 @@ public class BookingServiceImpl implements IBookingService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "user not found by id " + bookingRegistration.guestId()));
 
-        Spot spot = spotRepository.findById(bookingRegistration.spotId())
+        Spot spot = spotRepository.findByIdWithLock(bookingRegistration.spotId())
                 .orElseThrow(
                         () -> new ResourceNotFoundException("spot not found by id " + bookingRegistration.spotId()));
 
@@ -61,6 +65,14 @@ public class BookingServiceImpl implements IBookingService {
                 ||
                 bookingRegistration.checkOutDate().isEqual(bookingRegistration.checkInDate())) {
             throw new BadRequestException("segun sus fechas se esta llendo antes de haber llegado");
+        }
+        boolean isOverlapping = bookingRepository.existsOverlappingBooking(
+                spot.getId(),
+                bookingRegistration.checkInDate(),
+                bookingRegistration.checkOutDate(),
+                BookingStatus.CANCELLED);
+        if (isOverlapping) {
+            throw new BadRequestException("El alojamiento ya se encuentra reservado en esas fechas exactas.");
         }
         // 3. matematicas
         long noches = ChronoUnit.DAYS.between(bookingRegistration.checkInDate(), bookingRegistration.checkOutDate());
@@ -106,6 +118,18 @@ public class BookingServiceImpl implements IBookingService {
         Booking bookingCanceled = bookingRepository.save(booking);
 
         return bookingMapper.toDto(bookingCanceled);
+    }
+
+    @Override
+    public Page<BookingDto> FindMyBookings(Pageable pageable) {
+        String userEmail = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        User currentUser = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        return bookingRepository.findByGuestId(currentUser.getId(), pageable)
+                .map(bookingMapper::toDto);
     }
 
 }

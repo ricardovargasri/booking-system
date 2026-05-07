@@ -32,11 +32,10 @@ public class TokenBlacklistService {
         // (no tiene sentido meter en la lista un token ya expirado)
         if (ttlMillis > 0) {
             redisTemplate.opsForValue().set(
-                BLACKLIST_PREFIX + token,
-                "revoked",
-                ttlMillis,
-                TimeUnit.MILLISECONDS
-            );
+                    BLACKLIST_PREFIX + token,
+                    "revoked",
+                    ttlMillis,
+                    TimeUnit.MILLISECONDS);
         }
     }
 
@@ -46,7 +45,6 @@ public class TokenBlacklistService {
      */
     public boolean isRevoked(String token) {
         return Boolean.TRUE.equals(
-            redisTemplate.hasKey(BLACKLIST_PREFIX + token)
-        );
+                redisTemplate.hasKey(BLACKLIST_PREFIX + token));
     }
 }

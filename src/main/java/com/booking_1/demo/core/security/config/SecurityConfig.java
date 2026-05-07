@@ -38,12 +38,13 @@ public class SecurityConfig {
 
                                 .cors(org.springframework.security.config.Customizer.withDefaults())
                                 .csrf(csrf -> csrf.disable()) // Deshabilitamos CSRF porque usaremos JWT
+                                .headers(headers -> headers.frameOptions(frame -> frame.disable())) // Necesario para H2 Console
                                 .authorizeHttpRequests(auth -> auth
                                                 .requestMatchers(HttpMethod.POST, "/api/v1/user").permitAll() // Registro
                                                                                                               // libre
                                                 .requestMatchers("/api/v1/auth/**").permitAll() // Endpoints de login
                                                                                                 // libres
-                                                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                                                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/h2-console/**", "/actuator/**").permitAll()
                                                 .anyRequest().authenticated() // Todo lo demás protegido
                                 )
                                 .sessionManagement(session -> session

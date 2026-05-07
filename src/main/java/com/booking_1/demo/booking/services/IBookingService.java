@@ -18,4 +18,6 @@ public interface IBookingService {
 
     BookingDto save(BookingRegistrationDto bookingRegistration);
 
+    Page<BookingDto> FindMyBookings(Pageable pageable);
+
 }

@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,6 +42,7 @@ public class BookingController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Get all bookings (Paginated)")
     public Page<BookingDto> findAll(Pageable pageable) {
         return bookingService.findAll(pageable);
@@ -50,6 +51,12 @@ public class BookingController {
     @PatchMapping("/{id}/cancel")
     public BookingDto cancelBooking(@PathVariable Long id) {
         return bookingService.cancelBooking(id);
+    }
+
+    @GetMapping("/my")
+    @Operation(summary = "obtener las reservas de usuario autenticado")
+    public Page<BookingDto> getMyBookings(Pageable pageable) {
+        return bookingService.FindMyBookings(pageable);
     }
 
 }

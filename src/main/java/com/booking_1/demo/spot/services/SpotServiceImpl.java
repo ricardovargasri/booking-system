@@ -20,10 +20,17 @@ import lombok.RequiredArgsConstructor;
 public class SpotServiceImpl implements ISpotService {
     private final SpotMapper spotMapper;
     private final SpotRepository spotRepository;
+    private final com.booking_1.demo.user.repositories.UserRepository userRepository;
 
     @Override
     public SpotDto save(SpotRegistrationDto spotRegistrationDto) {
+        com.booking_1.demo.user.entities.User owner = userRepository.findById(spotRegistrationDto.ownerId())
+            .orElseThrow(() -> new ResourceNotFoundException("Owner not found"));
+
         Spot spot = spotMapper.spotToEntity(spotRegistrationDto);
+        spot.setOwner(owner);
+        spot.setIsAvailable(true); // Evitamos un NullPointerException al reservar
+        
         Spot spotSaved = spotRepository.save(spot);
         return spotMapper.toDto(spotSaved);
 
