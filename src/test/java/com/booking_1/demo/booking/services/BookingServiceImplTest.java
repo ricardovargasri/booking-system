@@ -80,4 +80,36 @@ class BookingServiceImplTest {
         // Verificamos que el mensaje de error sea el que pusiste en tu lógica
         assertEquals("es demasiada gente hermano", exception.getMessage());
     }
+
+    @Test
+    void save_ShouldThrowBadRequestException_WhenStayExceeds30Days() {
+        // Arrange
+        UUID guestId = UUID.randomUUID();
+        Long spotId = 1L;
+        LocalDate checkIn = LocalDate.now().plusDays(1);
+        LocalDate checkOut = checkIn.plusDays(31); // 31 días de estancia
+
+        BookingRegistrationDto dto = new BookingRegistrationDto(
+                guestId, spotId, checkIn, checkOut, 1, "Vacaciones largas"
+        );
+
+        User mockUser = new User();
+        mockUser.setId(guestId);
+
+        Spot mockSpot = new Spot();
+        mockSpot.setId(spotId);
+        mockSpot.setMaxCapacity(5); // Capacidad de sobra
+        mockSpot.setPricePerNight(100.0);
+        mockSpot.setIsAvailable(true);
+
+        when(userRepository.findById(guestId)).thenReturn(Optional.of(mockUser));
+        when(spotRepository.findByIdWithLock(spotId)).thenReturn(Optional.of(mockSpot));
+
+        // Act & Assert
+        BadRequestException exception = assertThrows(BadRequestException.class, () -> {
+            bookingService.save(dto);
+        });
+
+        assertEquals("No puedes reservar por más de 30 días", exception.getMessage());
+    }
 }

@@ -66,6 +66,12 @@ public class BookingServiceImpl implements IBookingService {
                 bookingRegistration.checkOutDate().isEqual(bookingRegistration.checkInDate())) {
             throw new BadRequestException("segun sus fechas se esta llendo antes de haber llegado");
         }
+
+        long noches = ChronoUnit.DAYS.between(bookingRegistration.checkInDate(),
+                bookingRegistration.checkOutDate());
+        if (noches > 30)
+            throw new BadRequestException("No puedes reservar por más de 30 días");
+
         boolean isOverlapping = bookingRepository.existsOverlappingBooking(
                 spot.getId(),
                 bookingRegistration.checkInDate(),
@@ -75,7 +81,6 @@ public class BookingServiceImpl implements IBookingService {
             throw new BadRequestException("El alojamiento ya se encuentra reservado en esas fechas exactas.");
         }
         // 3. matematicas
-        long noches = ChronoUnit.DAYS.between(bookingRegistration.checkInDate(), bookingRegistration.checkOutDate());
         Double totalPrice = noches * spot.getPricePerNight();
 
         // 4. armar el recibo

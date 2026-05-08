@@ -275,21 +275,30 @@ scrape_configs:
 
 ---
 
-# Cómo Ejecutar
+# Cómo Ejecutar (Guía paso a paso)
 
-## 1. Compilar el proyecto
+Para arrancar el sistema completo con Docker, sigue estos pasos en orden:
 
-IMPORTANTE:
-
-Antes de ejecutar Docker Compose debes generar el JAR.
+## Paso 1: Preparar el motor de Docker (Solo si usas Linux/Ubuntu)
+Si tienes instalado Docker Desktop, asegúrate de estar usando el contexto nativo para evitar errores de conexión:
 
 ```bash
-mvn clean package
+# Cambiar al contexto por defecto
+docker context use default
+
+# Verificar que el contexto es el correcto (debe tener un *)
+docker context ls
 ```
 
----
+## Paso 2: Compilar el proyecto y generar el JAR
+Docker necesita el archivo ejecutable de Java. Genéralo con Maven:
 
-## 2. Levantar containers
+```bash
+./mvnw clean package -DskipTests
+```
+
+## Paso 3: Levantar los contenedores
+Este comando descargará las imágenes (Redis, Prometheus, Grafana) y construirá la imagen de tu App:
 
 ```bash
 docker compose up --build
@@ -297,7 +306,17 @@ docker compose up --build
 
 ---
 
-# Problema Común en Ubuntu (Docker Context)
+## Paso 4: Verificación de servicios
+Una vez que veas logs en la terminal, puedes acceder a:
+
+*   **App API:** [http://localhost:8080](http://localhost:8080)
+*   **Grafana:** [http://localhost:3000](http://localhost:3000) (User: `admin` / Pass: `admin`)
+*   **Prometheus:** [http://localhost:9090](http://localhost:9090)
+*   **H2 Console:** [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
+
+---
+
+# Solución de problemas comunes
 
 Si `docker compose up` se queda congelado o:
 
@@ -401,3 +420,36 @@ jvm_threads_live_threads
 * Dockerización
 * Persistencia H2
 * Dashboards Grafana listos para integrar
+
+---
+
+# Estrategia de Calidad y Pruebas (Roadmap)
+
+Para asegurar la estabilidad del sistema, se ha definido el siguiente plan de pruebas:
+
+## 1. Pruebas Unitarias (Lógica de Negocio)
+**Objetivo:** Validar reglas de negocio aisladas en la capa de servicios.
+*   **Estado:** [En progreso]
+*   **Pendiente:**
+    *   [x] Validación de capacidad máxima en reservas.
+    *   [x] Validación de duración máxima de estancia (30 días).
+    *   [ ] Validación de fechas (check-in no pasado).
+    *   [ ] Cálculo exacto del precio total incluyendo posibles descuentos.
+
+## 2. Pruebas de Integración (Persistencia)
+**Objetivo:** Validar que las consultas SQL y la interacción con la BD son correctas.
+*   **Pendiente:**
+    *   [ ] Validación de lógica de solapamiento (`existsOverlappingBooking`).
+    *   [ ] Persistencia correcta de relaciones entre Usuario, Spot y Booking.
+
+## 3. Pruebas de API y Seguridad
+**Objetivo:** Validar endpoints REST y control de acceso.
+*   **Pendiente:**
+    *   [ ] Protección de rutas (Solo ADMIN puede crear/borrar Spots).
+    *   [ ] Validación de tokens JWT y revocación en Redis (Logout).
+    *   [ ] Formato de respuestas de error global (`ControllerAdvice`).
+
+## 4. Pruebas de Carga y Stress
+**Objetivo:** Asegurar que el sistema aguanta tráfico concurrente (evitar overbooking accidental).
+*   **Pendiente:**
+    *   [ ] Stress test con K6 simulando múltiples reservas simultáneas al mismo Spot.
