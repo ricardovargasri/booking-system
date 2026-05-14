@@ -32,12 +32,12 @@ public class SpotController {
 
     @PostMapping
     @Operation(summary = "Register a new spot", description = "Adds a new accommodation to the platform")
-    public SpotDto save(@RequestBody SpotRegistrationDto dto) {
+    public SpotDto save(@jakarta.validation.Valid @RequestBody SpotRegistrationDto dto) {
         return spotService.save(dto);
     }
 
     @PutMapping("/{id}")
-    public SpotDto update(@PathVariable Long id, @RequestBody SpotRegistrationDto dto) {
+    public SpotDto update(@PathVariable Long id, @jakarta.validation.Valid @RequestBody SpotRegistrationDto dto) {
         return spotService.updateSpot(id, dto);
     }
 
@@ -56,6 +56,12 @@ public class SpotController {
     @DeleteMapping("/{id}")
     public void deleteSpot(@PathVariable Long id) {
         spotService.deleteSpot(id);
+    }
+
+    @GetMapping("/my")
+    @Operation(summary = "Obtener los alojamientos del dueño actual")
+    public Page<SpotDto> getMySpots(Pageable pageable) {
+        return spotService.findMySpots(pageable);
     }
 
 }

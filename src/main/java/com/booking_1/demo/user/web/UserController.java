@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.booking_1.demo.user.entities.User;
 import com.booking_1.demo.user.dtos.UserDto;
 import com.booking_1.demo.user.dtos.UserRegistrationDto;
 import com.booking_1.demo.user.services.IUserService;
@@ -29,6 +31,14 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
 
     private final IUserService userService;
+
+    @GetMapping("/me")
+    @Operation(summary = "Get current user profile", description = "Returns the profile of the currently authenticated user")
+    public UserDto getMe() {
+        String email = ((org.springframework.security.core.userdetails.UserDetails) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal()).getUsername();
+        return userService.findByEmail(email);
+    }
 
     @PostMapping
     @Operation(summary = "Create a new user", description = "Registers a new user in the system with a default role")

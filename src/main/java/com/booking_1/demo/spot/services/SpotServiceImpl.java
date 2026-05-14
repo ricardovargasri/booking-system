@@ -4,10 +4,12 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.booking_1.demo.core.exceptions.ResourceNotFoundException;
 import com.booking_1.demo.spot.repositories.SpotRepository;
+import com.booking_1.demo.user.entities.User;
 import com.booking_1.demo.spot.dtos.SpotDto;
 import com.booking_1.demo.spot.dtos.SpotRegistrationDto;
 import com.booking_1.demo.spot.entities.Spot;
@@ -24,13 +26,18 @@ public class SpotServiceImpl implements ISpotService {
 
     @Override
     public SpotDto save(SpotRegistrationDto spotRegistrationDto) {
-        com.booking_1.demo.user.entities.User owner = userRepository.findById(spotRegistrationDto.ownerId())
-            .orElseThrow(() -> new ResourceNotFoundException("Owner not found"));
+        User owner = getCurrentUser();
+
+        // Si el usuario es USER, lo promovemos a OWNER al crear su primer spot
+        if (owner.getRol() == com.booking_1.demo.core.enums.Rol.USER) {
+            owner.setRol(com.booking_1.demo.core.enums.Rol.OWNER);
+            userRepository.save(owner);
+        }
 
         Spot spot = spotMapper.spotToEntity(spotRegistrationDto);
         spot.setOwner(owner);
         spot.setIsAvailable(true); // Evitamos un NullPointerException al reservar
-        
+
         Spot spotSaved = spotRepository.save(spot);
         return spotMapper.toDto(spotSaved);
 
@@ -52,25 +59,55 @@ public class SpotServiceImpl implements ISpotService {
 
     @Override
     public SpotDto updateSpot(Long id, SpotRegistrationDto spotRegistrationDto) {
-        return spotRepository.findById(id)
-                .map(s -> {
-                    s.setName(spotRegistrationDto.name());
-                    s.setLocation(spotRegistrationDto.location());
-                    s.setPricePerNight(spotRegistrationDto.pricePerNight());
-                    s.setMaxCapacity(spotRegistrationDto.maxCapacity());
-                    s.setTypeSpot(spotRegistrationDto.typeSpot());
-
-                    return spotRepository.save(s);
-                })
-                .map(spotMapper::toDto)
+        Spot spot = spotRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("spot not found by id " + id));
+
+        // Validación de propiedad (Ownership)
+        User currentUser = getCurrentUser();
+
+        if (!spot.getOwner().getId().equals(currentUser.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "No tienes permiso para editar este alojamiento");
+        }
+
+        spot.setName(spotRegistrationDto.name());
+        spot.setLocation(spotRegistrationDto.location());
+        spot.setPricePerNight(spotRegistrationDto.pricePerNight());
+        spot.setMaxCapacity(spotRegistrationDto.maxCapacity());
+        spot.setTypeSpot(spotRegistrationDto.typeSpot());
+
+        Spot spotSaved = spotRepository.save(spot);
+        return spotMapper.toDto(spotSaved);
     }
 
     @Override
     public void deleteSpot(Long id) {
         Spot spot = spotRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("spot not found with id: " + id));
+
+        // Validación de propiedad (Ownership)
+        User currentUser = getCurrentUser();
+
+        if (!spot.getOwner().getId().equals(currentUser.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "No tienes permiso para eliminar este alojamiento");
+        }
+
         spotRepository.delete(spot);
+    }
+
+    @Override
+    public Page<SpotDto> findMySpots(Pageable pageable) {
+        User currentUser = getCurrentUser();
+        return spotRepository.findByOwnerId(currentUser.getId(), pageable)
+                .map(spotMapper::toDto);
+    }
+
+    private User getCurrentUser() {
+        org.springframework.security.core.userdetails.UserDetails userDetails = 
+                (org.springframework.security.core.userdetails.UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + userDetails.getUsername()));
     }
 
 }

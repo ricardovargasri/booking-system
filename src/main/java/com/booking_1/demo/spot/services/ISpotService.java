@@ -1,7 +1,5 @@
 package com.booking_1.demo.spot.services;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -19,4 +17,5 @@ public interface ISpotService {
 
     void deleteSpot(Long id);
 
+    Page<SpotDto> findMySpots(Pageable pageable);
 }

@@ -50,6 +50,12 @@ public class UserServiceImpl implements IUserService {
 
     }
 
+    public UserDto findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(userMapper::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+    }
+
     public UserDto updateUser(UUID id, UserRegistrationDto userRegistrationDto) {
         return userRepository.findById(id)
                 .map(user -> {

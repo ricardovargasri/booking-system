@@ -4,7 +4,7 @@ Sistema de reservas tipo Booking/Airbnb desarrollado con Spring Boot.
 
 Incluye:
 
-* API REST + GraphQL
+* API REST
 * Seguridad JWT
 * Redis
 * H2 Database
@@ -19,7 +19,7 @@ Incluye:
 * Spring Boot 3.5.x
 * Spring Data JPA
 * Spring Security
-* Spring GraphQL
+* Spring Security
 * Redis
 * H2 Database
 * Prometheus
@@ -301,7 +301,7 @@ Docker necesita el archivo ejecutable de Java. Genéralo con Maven:
 Este comando descargará las imágenes (Redis, Prometheus, Grafana) y construirá la imagen de tu App:
 
 ```bash
-docker compose up --build
+docker --context default compose up --build
 ```
 
 ---
@@ -310,9 +310,15 @@ docker compose up --build
 Una vez que veas logs en la terminal, puedes acceder a:
 
 *   **App API:** [http://localhost:8080](http://localhost:8080)
+*   **Frontend Angular:** [http://localhost:4200](http://localhost:4200)
 *   **Grafana:** [http://localhost:3000](http://localhost:3000) (User: `admin` / Pass: `admin`)
 *   **Prometheus:** [http://localhost:9090](http://localhost:9090)
 *   **H2 Console:** [http://localhost:8080/h2-console](http://localhost:8080/h2-console)
+
+### Credenciales de prueba
+Para probar el sistema rápidamente sin registrarte:
+*   **Email:** `ricardo@email.com`
+*   **Contraseña:** `ricardo123`
 
 ---
 
@@ -414,7 +420,6 @@ jvm_threads_live_threads
 
 * JWT Authentication
 * Redis Token Blacklist
-* GraphQL
 * Swagger/OpenAPI
 * Observabilidad completa
 * Dockerización
@@ -425,31 +430,53 @@ jvm_threads_live_threads
 
 # Estrategia de Calidad y Pruebas (Roadmap)
 
-Para asegurar la estabilidad del sistema, se ha definido el siguiente plan de pruebas:
+Para asegurar la estabilidad del sistema, se ha definido el siguiente plan de pruebas y control de calidad:
 
 ## 1. Pruebas Unitarias (Lógica de Negocio)
 **Objetivo:** Validar reglas de negocio aisladas en la capa de servicios.
 *   **Estado:** [En progreso]
-*   **Pendiente:**
+*   **Checks:**
     *   [x] Validación de capacidad máxima en reservas.
     *   [x] Validación de duración máxima de estancia (30 días).
-    *   [ ] Validación de fechas (check-in no pasado).
-    *   [ ] Cálculo exacto del precio total incluyendo posibles descuentos.
+    *   [x] Validación de fechas (check-in no pasado).
+    *   [x] Validación de fechas (check-out posterior a check-in).
+    *   [x] Validación de flag `isAvailable` del Spot.
+    *   [x] Cálculo exacto del precio total (Noches * Precio).
+    *   [x] Flujo exitoso de creación de reserva (Happy Path).
 
 ## 2. Pruebas de Integración (Persistencia)
 **Objetivo:** Validar que las consultas SQL y la interacción con la BD son correctas.
-*   **Pendiente:**
-    *   [ ] Validación de lógica de solapamiento (`existsOverlappingBooking`).
-    *   [ ] Persistencia correcta de relaciones entre Usuario, Spot y Booking.
+*   **Estado:** [En progreso]
+*   **Checks:**
+    *   [x] Lógica de solapamiento (`existsOverlappingBooking`) - Casos base.
+    *   [x] Lógica de solapamiento - Casos borde (envolvente, interno, solape final).
+    *   [x] Persistencia correcta de relaciones entre Usuario, Spot y Booking.
+    *   [x] Integración con H2 en modo persistente (Archivo).
 
 ## 3. Pruebas de API y Seguridad
-**Objetivo:** Validar endpoints REST y control de acceso.
-*   **Pendiente:**
-    *   [ ] Protección de rutas (Solo ADMIN puede crear/borrar Spots).
-    *   [ ] Validación de tokens JWT y revocación en Redis (Logout).
+**Objetivo:** Validar endpoints REST/GraphQL y control de acceso.
+*   **Estado:** [En progreso]
+*   **Checks:**
+    *   [x] Protección de rutas por Roles (RBAC).
+    *   [x] Validación de propiedad del Spot (Ownership) para edición.
+    *   [ ] Validación de tokens JWT y revocación en Redis (Logout/Blacklist).
     *   [ ] Formato de respuestas de error global (`ControllerAdvice`).
 
 ## 4. Pruebas de Carga y Stress
 **Objetivo:** Asegurar que el sistema aguanta tráfico concurrente (evitar overbooking accidental).
-*   **Pendiente:**
-    *   [ ] Stress test con K6 simulando múltiples reservas simultáneas al mismo Spot.
+*   **Estado:** [Completado]
+*   **Checks:**
+    *   [x] Stress test con K6 para verificar `PESSIMISTIC_WRITE` (evitar overbooking).
+    *   [x] Stress test de Login y generación de JWT.
+
+---
+
+# Debilidades Detectadas y Mejoras Pendientes
+
+Durante la auditoría de código se han identificado los siguientes puntos de mejora:
+
+1.  **Seguridad en Reservas:** Validar que el `guestId` enviado en el DTO coincida con el usuario autenticado para evitar que un usuario cree reservas a nombre de otro.
+2.  **Robustez de Fechas:** Implementar validaciones más estrictas en la capa de entidad o mediante anotaciones personalizadas de Bean Validation.
+3.  **Entorno de Test:** Migrar de H2 a **Testcontainers** con PostgreSQL para asegurar que los bloqueos pesimistas se comportan exactamente igual que en producción.
+4.  **Documentación API:** Publicar la URL de Swagger UI en este README.
+5.  **Centralización de Logs:** Mejorar el formato de logs para que sean fácilmente parseables por herramientas de observabilidad.

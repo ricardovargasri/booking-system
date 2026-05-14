@@ -13,6 +13,9 @@ public interface IUserService {
 
     UserDto findById(UUID id);
 
+    UserDto findByEmail(String email);
+
+
     Page<UserDto> findAll(Pageable pageable);
 
     UserDto updateUser(UUID id, UserRegistrationDto userRegistrationDto);

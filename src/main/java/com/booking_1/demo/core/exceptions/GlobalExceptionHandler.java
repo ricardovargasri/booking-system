@@ -65,7 +65,22 @@ public class GlobalExceptionHandler {
                 return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
         }
 
-        @ExceptionHandler(Exception.class)
+        @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDeniedException(
+            org.springframework.security.access.AccessDeniedException ex,
+            WebRequest request) {
+
+        ErrorResponse errorDetails = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.FORBIDDEN.value(),
+                "Forbidden",
+                "No tienes permisos para acceder a este recurso.",
+                request.getDescription(false));
+
+        return new ResponseEntity<>(errorDetails, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(Exception.class)
         public ResponseEntity<ErrorResponse> handleGlobalException(
                         Exception ex,
                         WebRequest request) {

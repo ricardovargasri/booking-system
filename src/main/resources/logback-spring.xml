@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <!-- Appender para consola en formato legible (para desarrollo local) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Appender para formato JSON (ideal para Grafana Loki, ELK, etc) -->
+    <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <includeContext>true</includeContext>
+            <includeCallerData>true</includeCallerData>
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <level>level</level>
+                <thread>thread</thread>
+                <logger>logger</logger>
+                <message>message</message>
+            </fieldNames>
+        </encoder>
+    </appender>
+
+    <!-- Perfil por defecto: Consola normal -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+
+    <!-- Perfil de producción o Docker: Activa JSON -->
+    <springProfile name="prod,docker">
+        <root level="INFO">
+            <appender-ref ref="JSON_CONSOLE" />
+        </root>
+    </springProfile>
+
+</configuration>

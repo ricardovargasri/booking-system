@@ -11,6 +11,13 @@ services:
     volumes:
       - ./data:/app/data
 
+  frontend:
+    build: ./booking-frontend
+    ports:
+      - "4200:4200"
+    depends_on:
+      - app
+
   redis:
     image: redis:alpine
     ports:

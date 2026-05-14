@@ -44,6 +44,7 @@ public class User {
     private String email;
 
     @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "VARCHAR(255)")
     private Rol rol;
 
     private String password;
