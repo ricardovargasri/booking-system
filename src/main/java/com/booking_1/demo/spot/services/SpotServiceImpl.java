@@ -5,11 +5,15 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import com.booking_1.demo.core.exceptions.ResourceNotFoundException;
+import com.booking_1.demo.core.security.jwt.JwtService;
 import com.booking_1.demo.spot.repositories.SpotRepository;
 import com.booking_1.demo.user.entities.User;
+import com.booking_1.demo.spot.dtos.SpotCreationResponse;
 import com.booking_1.demo.spot.dtos.SpotDto;
 import com.booking_1.demo.spot.dtos.SpotRegistrationDto;
 import com.booking_1.demo.spot.entities.Spot;
@@ -23,15 +27,22 @@ public class SpotServiceImpl implements ISpotService {
     private final SpotMapper spotMapper;
     private final SpotRepository spotRepository;
     private final com.booking_1.demo.user.repositories.UserRepository userRepository;
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
 
     @Override
-    public SpotDto save(SpotRegistrationDto spotRegistrationDto) {
+    public SpotCreationResponse save(SpotRegistrationDto spotRegistrationDto) {
         User owner = getCurrentUser();
+        String updatedToken = null;
 
         // Si el usuario es USER, lo promovemos a OWNER al crear su primer spot
         if (owner.getRol() == com.booking_1.demo.core.enums.Rol.USER) {
             owner.setRol(com.booking_1.demo.core.enums.Rol.OWNER);
             userRepository.save(owner);
+
+            // Generamos un nuevo token con el rol actualizado
+            UserDetails userDetails = userDetailsService.loadUserByUsername(owner.getEmail());
+            updatedToken = jwtService.generateAccessToken(userDetails);
         }
 
         Spot spot = spotMapper.spotToEntity(spotRegistrationDto);
@@ -39,8 +50,9 @@ public class SpotServiceImpl implements ISpotService {
         spot.setIsAvailable(true); // Evitamos un NullPointerException al reservar
 
         Spot spotSaved = spotRepository.save(spot);
-        return spotMapper.toDto(spotSaved);
+        SpotDto spotDto = spotMapper.toDto(spotSaved);
 
+        return new SpotCreationResponse(spotDto, updatedToken);
     }
 
     @Override
@@ -104,10 +116,11 @@ public class SpotServiceImpl implements ISpotService {
     }
 
     private User getCurrentUser() {
-        org.springframework.security.core.userdetails.UserDetails userDetails = 
-                (org.springframework.security.core.userdetails.UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        org.springframework.security.core.userdetails.UserDetails userDetails = (org.springframework.security.core.userdetails.UserDetails) SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
         return userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + userDetails.getUsername()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("User not found with email: " + userDetails.getUsername()));
     }
 
 }

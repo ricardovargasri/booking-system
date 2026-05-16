@@ -3,11 +3,12 @@ package com.booking_1.demo.spot.services;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import com.booking_1.demo.spot.dtos.SpotCreationResponse;
 import com.booking_1.demo.spot.dtos.SpotDto;
 import com.booking_1.demo.spot.dtos.SpotRegistrationDto;
 
 public interface ISpotService {
-    SpotDto save(SpotRegistrationDto spotRegistrationDto);
+    SpotCreationResponse save(SpotRegistrationDto spotRegistrationDto);
 
     SpotDto findById(Long id);
 
