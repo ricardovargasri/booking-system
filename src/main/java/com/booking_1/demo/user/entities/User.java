@@ -47,7 +47,6 @@ public class User {
     @Column(columnDefinition = "VARCHAR(255)")
     private Rol rol;
 
-    private String password;
 
     @CreatedDate
     @Column(nullable = false, updatable = false)

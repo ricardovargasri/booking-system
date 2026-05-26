@@ -19,10 +19,10 @@ import com.booking_1.demo.booking.dtos.BookingRegistrationDto;
 import com.booking_1.demo.booking.mappers.BookingMapper;
 import com.booking_1.demo.booking.repositories.BookingRepository;
 import com.booking_1.demo.core.exceptions.BadRequestException;
+import com.booking_1.demo.core.security.services.SecurityService;
 import com.booking_1.demo.spot.entities.Spot;
 import com.booking_1.demo.spot.repositories.SpotRepository;
 import com.booking_1.demo.user.entities.User;
-import com.booking_1.demo.user.repositories.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceImplTest {
@@ -31,55 +31,54 @@ class BookingServiceImplTest {
     private BookingRepository bookingRepository;
 
     @Mock
-    private UserRepository userRepository;
-
-    @Mock
     private SpotRepository spotRepository;
 
     @Mock
     private BookingMapper bookingMapper;
 
+    @Mock
+    private SecurityService securityService;
+
     @InjectMocks
     private BookingServiceImpl bookingService;
 
+    // --- Helper para crear un usuario autenticado mock ---
+    private User mockAuthenticatedUser(UUID guestId) {
+        User mockUser = new User();
+        mockUser.setId(guestId);
+        when(securityService.getCurrentUser()).thenReturn(mockUser);
+        return mockUser;
+    }
+
     @Test
     void save_ShouldThrowBadRequestException_WhenGuestsExceedCapacity() {
-        // Arrange (Organizar los datos)
+        // Arrange
         UUID guestId = UUID.randomUUID();
         Long spotId = 1L;
-        
-        // Creamos un DTO con 10 personas
+
+        mockAuthenticatedUser(guestId);
+
         BookingRegistrationDto dto = new BookingRegistrationDto(
-                guestId,
                 spotId,
                 LocalDate.now().plusDays(1),
                 LocalDate.now().plusDays(3),
-                10, 
+                10,
                 "Ninguna"
         );
 
-        // Simulamos un usuario existente
-        User mockUser = new User();
-        mockUser.setId(guestId);
-
-        // Simulamos un alojamiento que SOLO acepta 2 personas
         Spot mockSpot = new Spot();
         mockSpot.setId(spotId);
-        mockSpot.setMaxCapacity(2); 
+        mockSpot.setMaxCapacity(2);
         mockSpot.setIsAvailable(true);
 
-        // Configuramos los Mocks: "Cuando el servicio pregunte, responde esto"
-        when(userRepository.findById(guestId)).thenReturn(Optional.of(mockUser));
         when(spotRepository.findByIdWithLock(spotId)).thenReturn(Optional.of(mockSpot));
 
-        // Act & Assert (Actuar y Verificar)
-        // Esperamos que al llamar a save(), se lance una BadRequestException
+        // Act & Assert
         BadRequestException exception = assertThrows(BadRequestException.class, () -> {
             bookingService.save(dto);
         });
 
-        // Verificamos que el mensaje de error sea el que pusiste en tu lógica
-        assertEquals("es demasiada gente hermano", exception.getMessage());
+        assertEquals("La cantidad de huéspedes excede la capacidad", exception.getMessage());
     }
 
     @Test
@@ -88,22 +87,20 @@ class BookingServiceImplTest {
         UUID guestId = UUID.randomUUID();
         Long spotId = 1L;
         LocalDate checkIn = LocalDate.now().plusDays(1);
-        LocalDate checkOut = checkIn.plusDays(31); // 31 días de estancia
+        LocalDate checkOut = checkIn.plusDays(31);
+
+        mockAuthenticatedUser(guestId);
 
         BookingRegistrationDto dto = new BookingRegistrationDto(
-                guestId, spotId, checkIn, checkOut, 1, "Vacaciones largas"
+                spotId, checkIn, checkOut, 1, "Vacaciones largas"
         );
-
-        User mockUser = new User();
-        mockUser.setId(guestId);
 
         Spot mockSpot = new Spot();
         mockSpot.setId(spotId);
-        mockSpot.setMaxCapacity(5); // Capacidad de sobra
+        mockSpot.setMaxCapacity(5);
         mockSpot.setPricePerNight(100.0);
         mockSpot.setIsAvailable(true);
 
-        when(userRepository.findById(guestId)).thenReturn(Optional.of(mockUser));
         when(spotRepository.findByIdWithLock(spotId)).thenReturn(Optional.of(mockSpot));
 
         // Act & Assert
@@ -119,22 +116,20 @@ class BookingServiceImplTest {
         // Arrange
         UUID guestId = UUID.randomUUID();
         Long spotId = 1L;
-        LocalDate checkIn = LocalDate.now().minusDays(1); // Ayer
+        LocalDate checkIn = LocalDate.now().minusDays(1);
         LocalDate checkOut = LocalDate.now().plusDays(2);
 
-        BookingRegistrationDto dto = new BookingRegistrationDto(
-                guestId, spotId, checkIn, checkOut, 1, "Reserva retroactiva"
-        );
+        mockAuthenticatedUser(guestId);
 
-        User mockUser = new User();
-        mockUser.setId(guestId);
+        BookingRegistrationDto dto = new BookingRegistrationDto(
+                spotId, checkIn, checkOut, 1, "Reserva retroactiva"
+        );
 
         Spot mockSpot = new Spot();
         mockSpot.setId(spotId);
         mockSpot.setMaxCapacity(5);
         mockSpot.setIsAvailable(true);
 
-        when(userRepository.findById(guestId)).thenReturn(Optional.of(mockUser));
         when(spotRepository.findByIdWithLock(spotId)).thenReturn(Optional.of(mockSpot));
 
         // Act & Assert
@@ -142,7 +137,7 @@ class BookingServiceImplTest {
             bookingService.save(dto);
         });
 
-        assertEquals("la fecha debe ser de este momento hacia adelante", exception.getMessage());
+        assertEquals("La fecha de inicio no puede ser en el pasado", exception.getMessage());
     }
 
     @Test
@@ -151,21 +146,19 @@ class BookingServiceImplTest {
         UUID guestId = UUID.randomUUID();
         Long spotId = 1L;
         LocalDate checkIn = LocalDate.now().plusDays(5);
-        LocalDate checkOut = LocalDate.now().plusDays(3); // Checkout antes que Checkin
+        LocalDate checkOut = LocalDate.now().plusDays(3);
+
+        mockAuthenticatedUser(guestId);
 
         BookingRegistrationDto dto = new BookingRegistrationDto(
-                guestId, spotId, checkIn, checkOut, 1, "Fechas invertidas"
+                spotId, checkIn, checkOut, 1, "Fechas invertidas"
         );
-
-        User mockUser = new User();
-        mockUser.setId(guestId);
 
         Spot mockSpot = new Spot();
         mockSpot.setId(spotId);
         mockSpot.setMaxCapacity(5);
         mockSpot.setIsAvailable(true);
 
-        when(userRepository.findById(guestId)).thenReturn(Optional.of(mockUser));
         when(spotRepository.findByIdWithLock(spotId)).thenReturn(Optional.of(mockSpot));
 
         // Act & Assert
@@ -173,7 +166,7 @@ class BookingServiceImplTest {
             bookingService.save(dto);
         });
 
-        assertEquals("segun sus fechas se esta llendo antes de haber llegado", exception.getMessage());
+        assertEquals("La fecha de salida debe ser posterior a la de entrada", exception.getMessage());
     }
 
     @Test
@@ -181,21 +174,18 @@ class BookingServiceImplTest {
         // Arrange
         UUID guestId = UUID.randomUUID();
         Long spotId = 1L;
-        
+
+        mockAuthenticatedUser(guestId);
+
         BookingRegistrationDto dto = new BookingRegistrationDto(
-                guestId, spotId, LocalDate.now().plusDays(1), LocalDate.now().plusDays(3), 1, "Cualquier cosa"
+                spotId, LocalDate.now().plusDays(1), LocalDate.now().plusDays(3), 1, "Cualquier cosa"
         );
 
-        User mockUser = new User();
-        mockUser.setId(guestId);
-
-        // Simulamos un alojamiento que NO está disponible
         Spot mockSpot = new Spot();
         mockSpot.setId(spotId);
-        mockSpot.setIsAvailable(false); 
-        mockSpot.setMaxCapacity(10); // Agregado para evitar NullPointerException en el check previo
+        mockSpot.setIsAvailable(false);
+        mockSpot.setMaxCapacity(10);
 
-        when(userRepository.findById(guestId)).thenReturn(Optional.of(mockUser));
         when(spotRepository.findByIdWithLock(spotId)).thenReturn(Optional.of(mockSpot));
 
         // Act & Assert
@@ -203,7 +193,7 @@ class BookingServiceImplTest {
             bookingService.save(dto);
         });
 
-        assertEquals("Spot is not available", exception.getMessage());
+        assertEquals("El alojamiento no está disponible", exception.getMessage());
     }
 
     @Test
@@ -216,12 +206,11 @@ class BookingServiceImplTest {
         double pricePerNight = 100.0;
         double expectedTotal = 300.0;
 
-        BookingRegistrationDto dto = new BookingRegistrationDto(
-                guestId, spotId, checkIn, checkOut, 2, "Trip"
-        );
+        mockAuthenticatedUser(guestId);
 
-        User guest = new User();
-        guest.setId(guestId);
+        BookingRegistrationDto dto = new BookingRegistrationDto(
+                spotId, checkIn, checkOut, 2, "Trip"
+        );
 
         Spot spot = new Spot();
         spot.setId(spotId);
@@ -230,8 +219,7 @@ class BookingServiceImplTest {
         spot.setIsAvailable(true);
 
         com.booking_1.demo.booking.entities.Booking mockBookingEntity = new com.booking_1.demo.booking.entities.Booking();
-        
-        when(userRepository.findById(guestId)).thenReturn(Optional.of(guest));
+
         when(spotRepository.findByIdWithLock(spotId)).thenReturn(Optional.of(spot));
         when(bookingRepository.existsOverlappingBooking(any(), any(), any(), any())).thenReturn(false);
         when(bookingMapper.toEntity(dto)).thenReturn(mockBookingEntity);
@@ -252,12 +240,11 @@ class BookingServiceImplTest {
         LocalDate checkIn = LocalDate.now().plusDays(1);
         LocalDate checkOut = LocalDate.now().plusDays(3);
 
-        BookingRegistrationDto dto = new BookingRegistrationDto(
-                guestId, spotId, checkIn, checkOut, 2, "Trip"
-        );
+        mockAuthenticatedUser(guestId);
 
-        User guest = new User();
-        guest.setId(guestId);
+        BookingRegistrationDto dto = new BookingRegistrationDto(
+                spotId, checkIn, checkOut, 2, "Trip"
+        );
 
         Spot spot = new Spot();
         spot.setId(spotId);
@@ -267,11 +254,11 @@ class BookingServiceImplTest {
 
         com.booking_1.demo.booking.entities.Booking mockBookingEntity = new com.booking_1.demo.booking.entities.Booking();
         com.booking_1.demo.booking.dtos.BookingDto expectedDto = new com.booking_1.demo.booking.dtos.BookingDto(
-                1L, 
-                guestId, 
-                spotId, 
-                checkIn, 
-                checkOut, 
+                1L,
+                guestId,
+                spotId,
+                checkIn,
+                checkOut,
                 java.time.LocalDateTime.now(),
                 com.booking_1.demo.core.enums.BookingStatus.PENDING,
                 200.0,
@@ -280,7 +267,6 @@ class BookingServiceImplTest {
                 "Trip"
         );
 
-        when(userRepository.findById(guestId)).thenReturn(Optional.of(guest));
         when(spotRepository.findByIdWithLock(spotId)).thenReturn(Optional.of(spot));
         when(bookingRepository.existsOverlappingBooking(any(), any(), any(), any())).thenReturn(false);
         when(bookingMapper.toEntity(dto)).thenReturn(mockBookingEntity);

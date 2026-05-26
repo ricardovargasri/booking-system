@@ -3,13 +3,14 @@ services:
     build: .
     ports:
       - "8080:8080"
-    depends_on:
-      - redis
     environment:
-      - SPRING_DATA_REDIS_HOST=redis
       - SPRING_DATASOURCE_URL=jdbc:h2:file:/app/data/bookingdb
     volumes:
       - ./data:/app/data
+    networks:
+      booking-net:
+        aliases:
+          - booking-backend
 
   frontend:
     build: ./booking-frontend
@@ -17,11 +18,23 @@ services:
       - "4200:4200"
     depends_on:
       - app
+    networks:
+      - booking-net
 
-  redis:
-    image: redis:alpine
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    command: start-dev --http-port 8180
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
     ports:
-      - "6379:6379"
+      - "8180:8180"
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    networks:
+      booking-net:
+        aliases:
+          - auth-server
 
   prometheus:
     image: prom/prometheus:latest
@@ -31,6 +44,8 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     depends_on:
       - app
+    networks:
+      - booking-net
 
   grafana:
     image: grafana/grafana:latest
@@ -40,3 +55,12 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     depends_on:
       - prometheus
+    networks:
+      - booking-net
+
+networks:
+  booking-net:
+    driver: bridge
+
+volumes:
+  keycloak_data:

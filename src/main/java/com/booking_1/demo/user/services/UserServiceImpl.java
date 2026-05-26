@@ -9,14 +9,10 @@ import com.booking_1.demo.user.entities.User;
 import com.booking_1.demo.user.mappers.UserMapper;
 import com.booking_1.demo.user.repositories.UserRepository;
 
-import java.util.List;
-
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
@@ -26,22 +22,7 @@ public class UserServiceImpl implements IUserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserDto save(UserRegistrationDto userRegistrationDto) {
-
-        // Verificar si el email ya existe
-        if (userRepository.findByEmail(userRegistrationDto.email()).isPresent()) {
-            throw new BadRequestException("El correo electrónico ya está registrado");
-        }
-
-        User user = userMapper.toEntity(userRegistrationDto);
-        user.setRol(Rol.USER);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        User userSaved = userRepository.save(user);
-
-        return userMapper.toDto(userSaved);
-    }
 
     public UserDto findById(UUID id) {
         return userRepository.findById(id)
@@ -61,10 +42,7 @@ public class UserServiceImpl implements IUserService {
                 .map(user -> {
                     user.setName(userRegistrationDto.name());
                     user.setEmail(userRegistrationDto.email());
-                    if (userRegistrationDto.password() != null) {
-                        user.setPassword(passwordEncoder.encode(userRegistrationDto.password()));
-                    }
-
+                    // La actualización de contraseña debe hacerse en Keycloak.
                     return userRepository.save(user);
                 })
                 .map(userMapper::toDto)

@@ -40,11 +40,6 @@ public class UserController {
         return userService.findByEmail(email);
     }
 
-    @PostMapping
-    @Operation(summary = "Create a new user", description = "Registers a new user in the system with a default role")
-    public UserDto save(@RequestBody UserRegistrationDto userRegistrationDto) {
-        return userService.save(userRegistrationDto);
-    }
 
     @PutMapping("/{id}")
     public UserDto update(@PathVariable UUID id, @RequestBody UserRegistrationDto dto) {
